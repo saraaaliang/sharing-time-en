@@ -240,6 +240,8 @@
   .st-hero-top .st-h1{font-size:52px;}
   .st-timer-display{font-size:44px;}
   .st-tab-btn{ padding:8px 12px; font-size:12.5px; }
+  .st-input, .st-textarea { font-size:12.5px; }
+  .st-input::placeholder, .st-textarea::placeholder { font-size:12.5px; }
 }
 
 /* ---- loading overlay ---- */
@@ -341,8 +343,7 @@
       <div class="st-eyebrow" style="margin-bottom:8px;">Upload what you're sharing this week</div>
       <input class="st-input" id="nameInput" placeholder="Your name" style="margin-bottom:8px;" />
       <textarea class="st-textarea" id="contentInput" placeholder="What are you sharing this week?"></textarea>
-      <input class="st-input" id="linkInput" placeholder="Related link (optional — e.g. YouTube/Medium/Slides)" style="margin-top:8px;" />
-      <input class="st-input" id="imageUrlInput" placeholder="Image URL (optional — paste an existing image link)" style="margin-top:8px;" />
+      <input class="st-input" id="linkInput" placeholder="Optional link — slides, YouTube, Medium, etc." style="margin-top:8px;" />
       <div class="st-file-row">
         <span style="font-size:12px;color:var(--ink-soft);">Or upload an image directly:</span>
         <input type="file" id="imageFileInput" accept="image/*" />
@@ -351,7 +352,7 @@
         <img id="imgPreview" />
         <button class="st-btn st-ghost" id="clearImgBtn" style="font-size:11px;padding:4px 8px;">Remove image</button>
       </div>
-      <div class="st-hint">Uploaded images are automatically compressed before saving. For larger or high-resolution images, use the "Image URL" field instead.</div>
+      <div class="st-hint">Uploaded images are automatically compressed before saving. Paste a YouTube link above and its thumbnail will show automatically.</div>
       <button class="st-btn" id="uploadBtn" style="margin-top:10px;">Post Sticky Note</button>
     </div>
     <div class="st-filter-row">
@@ -642,17 +643,16 @@ window.storage = {
     if(!name || !content) return;
     let link = document.getElementById('linkInput').value.trim();
     if(link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
-    const imageUrl = document.getElementById('imageUrlInput').value.trim();
     const id = Date.now()+'-'+Math.random().toString(36).slice(2,7);
-    const hasImage = !!state.pendingImageDataUrl && !imageUrl;
-    state.data.entries.push({ id, name, content, link: link || '', imageUrl: imageUrl || '', hasImage, topic: state.data.topic || '(Uncategorized)', timestamp: Date.now() });
+    const hasImage = !!state.pendingImageDataUrl;
+    state.data.entries.push({ id, name, content, link: link || '', hasImage, topic: state.data.topic || '(Uncategorized)', timestamp: Date.now() });
     if(hasImage){
       await saveEntryImage(id, state.pendingImageDataUrl);
       state.imageCache[id] = state.pendingImageDataUrl;
     }
     await saveData(state.data);
     document.getElementById('nameInput').value=''; document.getElementById('contentInput').value='';
-    document.getElementById('linkInput').value=''; document.getElementById('imageUrlInput').value='';
+    document.getElementById('linkInput').value='';
     document.getElementById('clearImgBtn').click();
     populateMonthSelect(); renderBoard(); renderPreview();
   });
