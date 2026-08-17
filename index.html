@@ -67,7 +67,8 @@
 .st-mono { font-family: 'Jost', sans-serif; font-weight: 700; }
 
 /* ---- tabs ---- */
-.st-tabs { display:flex; gap:6px; padding:14px 14px 0; background: var(--paper-dark); flex-wrap:wrap; }
+.st-tabs { display:flex; gap:6px; padding:14px 14px 0; background: var(--paper-dark); flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.st-tabs::-webkit-scrollbar { display:none; }
 .st-tab-btn {
   padding: 9px 16px; border:none; border-radius: 7px 7px 0 0;
   background: transparent; font-family:'Jost','Noto Sans TC',sans-serif; font-weight:700; font-size:14px; cursor:pointer;
@@ -235,7 +236,11 @@
 @media (max-width: 780px) {
   .st-two-col { grid-template-columns: 1fr; max-width:360px; }
 }
-@media (max-width: 560px) { .st-hero-top .st-h1{font-size:52px;} .st-timer-display{font-size:44px;} }
+@media (max-width: 560px) {
+  .st-hero-top .st-h1{font-size:52px;}
+  .st-timer-display{font-size:44px;}
+  .st-tab-btn{ padding:8px 12px; font-size:12.5px; }
+}
 
 /* ---- loading overlay ---- */
 .st-loading-overlay {
