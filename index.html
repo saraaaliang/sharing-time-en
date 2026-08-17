@@ -341,7 +341,7 @@
       <div class="st-eyebrow" style="margin-bottom:8px;">Upload what you're sharing this week</div>
       <input class="st-input" id="nameInput" placeholder="Your name" style="margin-bottom:8px;" />
       <textarea class="st-textarea" id="contentInput" placeholder="What are you sharing this week?"></textarea>
-      <input class="st-input" id="linkInput" placeholder="Related link (optional — e.g. YouTube/Medium)" style="margin-top:8px;" />
+      <input class="st-input" id="linkInput" placeholder="Related link (optional — e.g. YouTube/Medium/Slides)" style="margin-top:8px;" />
       <input class="st-input" id="imageUrlInput" placeholder="Image URL (optional — paste an existing image link)" style="margin-top:8px;" />
       <div class="st-file-row">
         <span style="font-size:12px;color:var(--ink-soft);">Or upload an image directly:</span>
@@ -548,6 +548,11 @@ window.storage = {
   function weekOfMonth(date){ return Math.min(5, Math.ceil(date.getDate()/7)); }
   function monthKey(date){ return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0'); }
   function monthLabel(key){ const [y,m] = key.split('-'); const names=['January','February','March','April','May','June','July','August','September','October','November','December']; return names[parseInt(m,10)-1]+' '+y; }
+  function youtubeThumb(url){
+    if(!url) return '';
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : '';
+  }
 
   // ---- tabs ----
   root.querySelectorAll('.st-tab-btn').forEach(btn=>{
@@ -695,7 +700,7 @@ window.storage = {
       const color = STICKY_COLORS[i % STICKY_COLORS.length];
       const d = new Date(e.timestamp);
       const dateStr = (d.getMonth()+1)+'/'+d.getDate();
-      const imgSrc = e.imageUrl || (e.hasImage ? state.imageCache[e.id] : '');
+      const imgSrc = e.imageUrl || (e.hasImage ? state.imageCache[e.id] : '') || youtubeThumb(e.link);
       const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="" onerror="this.style.display='none'" />` : '';
       const linkHtml = e.link ? `<a class="st-link" href="${escapeHtml(e.link)}" target="_blank" rel="noopener">🔗 Related link</a>` : '';
       return `<div class="st-sticky" style="border-left-color:${color};"><b>${escapeHtml(e.name)}</b>${escapeHtml(e.content)}${imgHtml}${linkHtml}<time>${escapeHtml(e.topic)} · ${dateStr}</time></div>`;
