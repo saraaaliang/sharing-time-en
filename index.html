@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sharing Time</title>
+</head>
+<body style="margin:0;padding:0;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Jost:wght@500;600;700;800&display=swap');
+
+.st-app, .st-app * { box-sizing: border-box; }
+.st-app {
+  position: relative;
+  --paper: #FBF8F0;
+  --paper-dark: #F1ECDC;
+  --board: linear-gradient(155deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 100%);
+  --board-line: #E4DDC8;
+  --ink: #2A241C;
+  --ink-soft: #746B59;
+  --brand-soft: #FCEB99;
+  --brand: #F3D948;
+  --brand-dark: #DEC220;
+  --support-soft: #DCF2E9;
+  --support: #6EBF9E;
+  --support-dark: #4C9678;
+  --explore-soft: #FCEB99;
+  --explore: #F3D948;
+  --explore-dark: #DEC220;
+  --sharing-soft: #FAD7BE;
+  --sharing: #E86B36;
+  --sharing-dark: #B84F22;
+  --sage: #4E5B40;
+  --sage-dark: #3B4630;
+  --white-note: #FFFFFF;
+  --glass-bg: linear-gradient(155deg, rgba(255,255,255,.46) 0%, rgba(255,255,255,.16) 100%);
+  --glass-note: linear-gradient(155deg, rgba(255,255,255,.58) 0%, rgba(255,255,255,.30) 100%);
+  /* hero glow — vivid, high-saturation versions of brand/support/sharing, used only behind the title */
+  --hero-brand: #FFD100;
+  --hero-support: #0FB27E;
+  --hero-sharing: #FF4B12;
+  /* card flip-front — lightened green & orange for better text contrast, kept out of shared vars so nothing else shifts */
+  --card-support-soft: #EBF8F1;
+  --card-support: #93DABD;
+  --card-support-dark: #6FC4A0;
+  --card-sharing-soft: #FDE6D4;
+  --card-sharing: #F4A87A;
+  --card-sharing-dark: #EA8148;
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(243,217,72,.38), transparent 44%),
+    radial-gradient(circle at 92% 15%, rgba(143,174,124,.32), transparent 47%),
+    radial-gradient(circle at 40% 95%, rgba(232,147,79,.30), transparent 47%),
+    var(--paper);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 24px rgba(34,30,25,.08);
+  min-height: 640px;
+}
+.st-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.st-handwrite { font-family: 'Jost','Noto Sans TC', sans-serif; font-weight: 800; }
+.st-mono { font-family: 'Jost', sans-serif; font-weight: 700; }
+
+/* ---- tabs ---- */
+.st-tabs { display:flex; gap:6px; padding:14px 14px 0; background: var(--paper-dark); flex-wrap:wrap; }
+.st-tab-btn {
+  padding: 9px 16px; border:none; border-radius: 7px 7px 0 0;
+  background: transparent; font-family:'Jost','Noto Sans TC',sans-serif; font-weight:700; font-size:14px; cursor:pointer;
+  color: var(--ink-soft); transition: background .15s, color .15s; user-select:none; white-space:nowrap;
+}
+.st-tab-btn.active { background: var(--brand); color: var(--ink); }
+.st-tab-btn:hover { color: var(--ink); }
+
+.st-panel { display:none; padding: 26px; }
+.st-panel.active { display:block; animation: stFade .3s ease; }
+@keyframes stFade { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+/* ---- shared bits ---- */
+.st-eyebrow { font-family:'Jost',sans-serif; font-weight:600; font-size:13px; color: var(--ink-soft); letter-spacing:1.5px; text-transform:uppercase; }
+.st-h1 { font-family:'Jost','Noto Sans TC',sans-serif; font-weight:800; font-size:40px; margin:2px 0 6px; line-height:1.15; }
+.st-h2 { font-family:'Jost','Noto Sans TC',sans-serif; font-weight:700; font-size:24px; margin:0 0 14px; }
+.st-btn {
+  font-family:'Noto Sans TC',sans-serif; font-weight:700; border:none; border-radius: 6px;
+  padding: 10px 18px; background: var(--sage); color:#fff; cursor:pointer; box-shadow: 0 4px 12px rgba(34,30,25,.25);
+  transition: transform .1s, box-shadow .1s; white-space:nowrap;
+}
+.st-btn:active { transform: translateY(2px); box-shadow: 0 2px 6px rgba(34,30,25,.2); }
+.st-btn.st-ghost { background: var(--white-note); color: var(--ink); box-shadow: 0 2px 8px rgba(34,30,25,.12); }
+.st-btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+.st-input, .st-textarea {
+  font-family:'Noto Sans TC',sans-serif; border:none; border-radius:6px; padding:9px 12px;
+  background: rgba(255,255,255,.7); width:100%; font-size:14px; box-shadow: inset 0 0 0 1px rgba(34,30,25,.08);
+}
+.st-textarea { resize: vertical; min-height:64px; }
+
+/* ---- landing (hero) ---- */
+.st-panel[data-panel="landing"] { padding: 44px 32px 36px; }
+.st-hero-top {
+  position: relative; text-align:center; max-width:900px; margin:20px auto 90px; padding-top:14px;
+}
+.st-hero-top .st-h1 { font-size: clamp(72px, 12vw, 168px); letter-spacing:-.015em; line-height:1.02; margin:20px 0 18px; }
+.st-hero-sub { line-height:1.85; font-size:13px; color: var(--ink-soft); max-width:460px; margin:18px auto 0; }
+.st-hero-mid { max-width:720px; margin:0 auto 80px; display:flex; flex-direction:column; align-items:center; }
+.st-hero-bottom { max-width:720px; margin:0 auto; padding-bottom:12px; }
+.st-preview-panel {
+  background: var(--glass-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-radius: 10px; padding: 18px 20px 20px; box-shadow: 0 8px 22px rgba(34,30,25,.10);
+}
+.st-topic-note {
+  background: linear-gradient(150deg, var(--brand-soft) 0%, var(--brand) 55%, var(--brand-dark) 100%);
+  border:none; border-radius: 9px; text-align:left;
+  padding: 18px 20px; max-width: 340px; width:100%; box-shadow: 0 10px 26px rgba(34,30,25,.20);
+}
+.st-entry-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:32px; width:100%; text-align:left; }
+.st-entry-card {
+  background: var(--glass-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border:none; border-radius:8px; padding:22px 20px; cursor:pointer;
+  transition: transform .15s, box-shadow .15s; box-shadow: 0 4px 16px rgba(34,30,25,.10);
+}
+.st-entry-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(34,30,25,.16); }
+.st-entry-num { font-family:'Jost',sans-serif; font-weight:700; font-size:12px; color: var(--sharing-dark); letter-spacing:1px; }
+.st-reminder-slot { display:flex; align-items:center; justify-content:center; height:42px; }
+.st-reminder-chip {
+  display:inline-flex; align-items:center; gap:10px; margin-top:0; margin-bottom:0; padding:8px 16px 8px 14px;
+  border-radius:999px; box-shadow: 0 4px 14px rgba(34,30,25,.10); max-width:480px; text-align:left;
+  opacity:1; transition: opacity 1.8s cubic-bezier(.4,0,.2,1);
+}
+.st-reminder-chip.st-fade-out { opacity:0; }
+.st-reminder-icon { font-size:13px; color: var(--sharing-dark); flex:0 0 auto; line-height:1; }
+.st-reminder-particle-wrap {
+  flex:1; font-family:'Noto Sans TC',sans-serif; font-weight:400; font-size:12.5px; line-height:1.5;
+  color: var(--ink-soft); opacity:1; transform: translateY(0);
+  transition: opacity 1.8s cubic-bezier(.4,0,.2,1), transform 1.8s cubic-bezier(.4,0,.2,1);
+}
+.st-reminder-particle-wrap.st-fade-out { opacity:0; transform: translateY(3px); }
+.st-preview-strip { display:flex; gap:14px; margin-top:18px; flex-wrap:wrap; }
+.st-mini-note { background: var(--glass-note); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border:none; border-left:4px solid var(--brand); border-radius:5px; padding:10px 12px; font-size:12.5px; max-width:170px; box-shadow: 0 3px 10px rgba(34,30,25,.08); }
+.st-topic-banner {
+  background: linear-gradient(150deg, var(--brand-soft) 0%, var(--brand) 55%, var(--brand-dark) 100%);
+  border-radius: 9px; padding:22px 28px; display:flex; align-items:center; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; box-shadow: 0 10px 26px rgba(34,30,25,.20); width:100%;
+}
+
+/* ---- cards ---- */
+.st-card-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap:18px; }
+.st-flip-outer {
+  perspective: 1600px;
+  height: 190px;
+  cursor:pointer;
+  transition: transform .25s cubic-bezier(.22,1,.36,1);
+}
+.st-flip-outer:hover { transform: translateY(-3px); }
+.st-flip-outer:active { transform: translateY(-1px) scale(.98); }
+.st-flip-inner {
+  position:relative; width:100%; height:100%;
+  transition: transform .7s cubic-bezier(.45,1.6,.4,1), filter .7s ease;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.st-flip-outer.flipped .st-flip-inner {
+  transform: rotateY(180deg) scale(1.035) translateZ(18px);
+}
+.st-flip-outer:not(.flipped):hover .st-flip-inner { transform: rotateY(-6deg) scale(1.015); }
+.st-flip-face {
+  position:absolute; inset:0; backface-visibility:hidden; border:none; border-radius:9px; padding:14px;
+  display:flex; flex-direction:column; justify-content:center;
+  transition: box-shadow .7s ease;
+}
+.st-flip-front {
+  background: linear-gradient(150deg, var(--card-support-soft) 0%, var(--card-support) 55%, var(--card-support-dark) 100%);
+  box-shadow: 0 10px 24px rgba(34,30,25,.18);
+}
+.st-flip-outer.flipped .st-flip-front,
+.st-flip-outer.flipped .st-flip-front-sharing {
+  box-shadow: 0 26px 40px rgba(34,30,25,.30);
+}
+.st-flip-front-sharing {
+  background: linear-gradient(150deg, var(--card-sharing-soft) 0%, var(--card-sharing) 55%, var(--card-sharing-dark) 100%);
+}
+.st-flip-back {
+  background: var(--glass-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  transform: rotateY(180deg); box-shadow: 0 10px 24px rgba(34,30,25,.12);
+}
+.st-flip-outer.flipped .st-flip-back { box-shadow: 0 26px 40px rgba(34,30,25,.24); }
+.st-card-theme { font-family:'Jost',sans-serif; font-weight:700; font-size:10px; letter-spacing:.5px; opacity:.7; margin-bottom:6px; }
+.st-card-q { font-size:13.5px; font-weight:700; line-height:1.4; }
+.st-card-a { font-size:12px; line-height:1.5; color: var(--ink-soft); }
+.st-stamp { position:absolute; bottom:10px; right:12px; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.st-stamp-icon { width:26px; height:26px; border-radius:50%; background:#fff; box-shadow:0 2px 8px rgba(34,30,25,.16); display:flex; align-items:center; justify-content:center; }
+.st-stamp-label { font-family:'Jost',sans-serif; font-weight:700; font-size:10px; color:var(--sage); }
+
+/* ---- board ---- */
+.st-board-panel .st-panel-inner {
+  background: var(--board); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border:none; border-radius:9px; padding:20px; min-height: 380px; box-shadow: inset 0 0 0 1px rgba(34,30,25,.06);
+}
+.st-panel-content { max-width:720px; margin:0 auto; }
+.st-panel-body { max-width:760px; margin:0 auto; }
+.st-filter-row { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.st-filter-btn { padding:6px 14px; border-radius:12px; border:none; background:var(--paper-dark); font-size:13px; cursor:pointer; font-weight:700; color:var(--ink-soft); white-space:nowrap; }
+.st-filter-btn.active { background: var(--sage); color:#fff; }
+.st-sticky-wall { display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; }
+.st-sticky { width:150px; min-height:120px; padding:12px; border-radius:6px; border-left:5px solid var(--support); box-shadow:0 6px 16px rgba(34,30,25,.12); font-size:12.5px; position:relative; background: var(--glass-note); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.st-sticky b { display:block; margin-bottom:4px; }
+.st-sticky time { display:block; margin-top:8px; font-size:10px; opacity:.55; }
+.st-upload-box { background: var(--glass-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border:none; border-radius:8px; padding:16px; max-width:440px; margin-bottom:18px; box-shadow: 0 6px 20px rgba(34,30,25,.10); }
+.st-empty-note { color: var(--ink-soft); font-family:'Jost',sans-serif; font-weight:600; font-size:14px; }
+.st-sticky img { display:block; width:100%; max-height:90px; object-fit:cover; border-radius:5px; margin:6px 0; }
+.st-sticky a.st-link { display:inline-block; margin-top:4px; font-size:11px; color:#1d4ed8; text-decoration:underline; word-break:break-all; }
+.st-history-controls { display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
+.st-history-controls select { width:auto; }
+.st-history-controls input { flex:1; min-width:220px; }
+.st-file-row { display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap; }
+.st-file-row input[type=file] { font-size:11.5px; max-width:190px; }
+.st-img-preview-wrap { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.st-img-preview-wrap img { max-width:90px; max-height:90px; border-radius:5px; border:none; object-fit:cover; box-shadow: 0 4px 10px rgba(34,30,25,.15); }
+.st-hint { font-size:11.5px; color: var(--ink-soft); margin-top:4px; line-height:1.4; }
+
+/* ---- activity ---- */
+.st-timer-wrap { text-align:center; background: var(--glass-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border:none; border-radius:10px; padding:22px; box-shadow: 0 10px 26px rgba(34,30,25,.14); min-height:360px; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.st-timer-display { font-family:'Jost',sans-serif; font-weight:700; font-size:56px; line-height:1; margin:8px 0; }
+.st-preset-row { display:flex; gap:8px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
+.st-timer-ctrl { display:flex; gap:10px; justify-content:center; margin-top:12px; }
+.st-draw-zone { text-align:center; background: var(--glass-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border:none; border-radius:10px; padding:22px; box-shadow: 0 10px 26px rgba(34,30,25,.14); min-height:360px; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.st-draw-btn-row { display:flex; gap:10px; justify-content:center; margin-top:8px; flex-wrap:wrap; }
+.st-drawn-card { max-width: 300px; width:100%; min-height:190px; margin: 18px auto 0; }
+.st-deck-count { font-family:'Jost',sans-serif; font-weight:600; font-size:13px; color: var(--ink-soft); }
+.st-two-col { display:grid; grid-template-columns: 1fr 1fr; gap:28px; max-width:680px; margin:0 auto; align-items:stretch; }
+.st-doodle { display:block; margin: 6px 0 14px; }
+@media (max-width: 780px) {
+  .st-two-col { grid-template-columns: 1fr; max-width:360px; }
+}
+@media (max-width: 560px) { .st-hero-top .st-h1{font-size:52px;} .st-timer-display{font-size:44px;} }
+
+/* ---- loading overlay ---- */
+.st-loading-overlay {
+  position:absolute; inset:0; z-index:60;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  background: var(--paper);
+  transition: opacity .45s ease, visibility .45s ease;
+}
+.st-loading-overlay.st-hide { opacity:0; visibility:hidden; pointer-events:none; }
+.st-loading-ring {
+  width:34px; height:34px; border-radius:50%;
+  border: 4px solid var(--paper-dark);
+  border-top-color: var(--sage);
+  border-right-color: var(--brand);
+  animation: stSpin .85s linear infinite;
+}
+.st-loading-label {
+  font-family:'Jost',sans-serif; font-weight:600; font-size:12.5px; letter-spacing:1.5px;
+  text-transform:uppercase; color: var(--ink-soft);
+}
+@keyframes stSpin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="st-app" id="stApp">
+  <div class="st-loading-overlay" id="stLoadingOverlay">
+    <div class="st-loading-ring"></div>
+    <div class="st-loading-label">Loading</div>
+  </div>
+  <div class="st-tabs">
+    <div class="st-tab-btn active" data-tab="landing">Home</div>
+    <div class="st-tab-btn" data-tab="cards">Cards</div>
+    <div class="st-tab-btn" data-tab="board">Share Board</div>
+    <div class="st-tab-btn" data-tab="activity">This Week's Session</div>
+  </div>
+
+  <!-- LANDING -->
+  <div class="st-panel active" data-panel="landing">
+    <div class="st-hero-top">
+      <div class="st-reminder-slot">
+        <div class="st-reminder-chip st-glass" id="reminderChip">
+          <span class="st-reminder-icon">✦</span>
+          <span id="reminderText" class="st-reminder-particle-wrap"></span>
+        </div>
+      </div>
+      <div class="st-eyebrow" style="margin-top:26px;">TOGETHER WE GROW</div>
+      <div class="st-h1">Sharing Time</div>
+      <p class="st-hero-sub">This is a space where everyone builds skills across creative teams and opens up more two-way conversation, by sharing knowledge and giving feedback. Let's learn from and talk with each other, and build a workplace with more psychological safety along the way.</p>
+    </div>
+
+    <div class="st-hero-mid">
+      <div class="st-topic-banner">
+        <div>
+          <div class="st-eyebrow">This Week's Topic</div>
+          <div id="topicDisplay" style="font-size:20px;font-weight:700;margin-top:4px;">Not set yet</div>
+          <div id="topicEditRow" style="display:none;gap:6px;margin-top:8px;">
+            <input class="st-input" id="topicInput" placeholder="Enter this week's sharing topic" />
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="st-btn st-ghost" id="topicEditBtn" style="font-size:12px;padding:6px 10px;">✏️ Host: Set Topic</button>
+          <button class="st-btn" id="topicSaveBtn" style="display:none;font-size:12px;padding:6px 10px;">Save</button>
+        </div>
+      </div>
+      <div class="st-entry-grid">
+        <div class="st-entry-card" data-goto="cards"><div class="st-entry-num">01</div><div class="st-h2" style="font-size:18px;margin:4px 0;">Cards</div><div style="font-size:13px;color:var(--ink-soft);">See how Explore cards work →</div></div>
+        <div class="st-entry-card" data-goto="board"><div class="st-entry-num">02</div><div class="st-h2" style="font-size:18px;margin:4px 0;">Share Board</div><div style="font-size:13px;color:var(--ink-soft);">Upload what you're sharing this week →</div></div>
+        <div class="st-entry-card" data-goto="activity"><div class="st-entry-num">03</div><div class="st-h2" style="font-size:18px;margin:4px 0;">This Week's Session</div><div style="font-size:13px;color:var(--ink-soft);">Timer + card draw — let's begin →</div></div>
+      </div>
+    </div>
+
+    <div class="st-hero-bottom">
+      <div class="st-preview-panel">
+        <div class="st-eyebrow">Latest Uploads</div>
+        <div class="st-preview-strip" id="previewStrip"><span style="font-size:13px;color:var(--ink-soft);">Loading…</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="st-panel" data-panel="cards">
+    <div class="st-h2">Cards</div>
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:-8px;margin-bottom:20px;">There are two types of cards: Explore cards and Support cards. Click a card to flip it and see the question on the front and the explanation on the back.</p>
+
+    <div class="st-h2" style="font-size:20px;">Explore Cards</div>
+    <p style="font-size:12px;color:var(--ink-soft);margin-top:-10px;margin-bottom:14px;">Explore cards give you a ready-made question to ask right after someone shares. These follow-up questions make it easy to stay curious and turn a quick share into a fuller story.</p>
+    <div class="st-card-grid" id="exploreGrid"></div>
+
+    <div class="st-h2" style="margin-top:30px;font-size:20px;">Support Cards</div>
+    <p style="font-size:12px;color:var(--ink-soft);margin-top:-10px;margin-bottom:14px;">Support cards also invite you to reflect on your own experience. Each card gives you a sentence starter to complete, so your response feels specific and genuine — not just polite.</p>
+    <div class="st-card-grid" id="supportGrid"></div>
+  </div>
+
+  <!-- BOARD -->
+  <div class="st-panel" data-panel="board">
+   <div class="st-panel-body">
+    <div class="st-h2">Share Board</div>
+    <div class="st-upload-box">
+      <div class="st-eyebrow" style="margin-bottom:8px;">Upload what you're sharing this week</div>
+      <input class="st-input" id="nameInput" placeholder="Your name" style="margin-bottom:8px;" />
+      <textarea class="st-textarea" id="contentInput" placeholder="What are you sharing this week?"></textarea>
+      <input class="st-input" id="linkInput" placeholder="Related link (optional — e.g. YouTube/Medium)" style="margin-top:8px;" />
+      <input class="st-input" id="imageUrlInput" placeholder="Image URL (optional — paste an existing image link)" style="margin-top:8px;" />
+      <div class="st-file-row">
+        <span style="font-size:12px;color:var(--ink-soft);">Or upload an image directly:</span>
+        <input type="file" id="imageFileInput" accept="image/*" />
+      </div>
+      <div class="st-img-preview-wrap" id="imgPreviewWrap" style="display:none;">
+        <img id="imgPreview" />
+        <button class="st-btn st-ghost" id="clearImgBtn" style="font-size:11px;padding:4px 8px;">Remove image</button>
+      </div>
+      <div class="st-hint">Uploaded images are automatically compressed before saving. For larger or high-resolution images, use the "Image URL" field instead.</div>
+      <button class="st-btn" id="uploadBtn" style="margin-top:10px;">Post Sticky Note</button>
+    </div>
+    <div class="st-filter-row">
+      <div class="st-filter-btn active" data-filter="week">This Week</div>
+      <div class="st-filter-btn" data-filter="history">History</div>
+      <button class="st-btn st-ghost" id="refreshBoardBtn" style="margin-left:auto;font-size:12px;padding:6px 12px;">🔄 Refresh</button>
+    </div>
+    <div class="st-history-controls" id="historyControls">
+      <select class="st-input" id="monthSelect"><option value="all">All Months</option></select>
+      <select class="st-input" id="weekSelect">
+        <option value="all">All Weeks</option>
+        <option value="1">Week 1</option>
+        <option value="2">Week 2</option>
+        <option value="3">Week 3</option>
+        <option value="4">Week 4</option>
+        <option value="5">Week 5</option>
+      </select>
+      <input class="st-input" id="searchInput" placeholder="🔍 Search by keyword (name / content / link — searches all history)" />
+    </div>
+    <div class="st-board-panel"><div class="st-panel-inner">
+      <div class="st-sticky-wall" id="stickyWall"><span class="st-empty-note">Loading…</span></div>
+    </div></div>
+   </div>
+  </div>
+
+  <!-- ACTIVITY -->
+  <div class="st-panel" data-panel="activity">
+   <div class="st-panel-body">
+    <div class="st-h2">This Week's Session</div>
+    <div class="st-two-col">
+      <div class="st-timer-wrap">
+        <div class="st-eyebrow">Timer</div>
+        <div class="st-preset-row">
+          <button class="st-btn st-ghost" data-preset="120" style="font-size:12px;">Share 2:00</button>
+          <button class="st-btn st-ghost" data-preset="180" style="font-size:12px;">Share 3:00</button>
+          <button class="st-btn st-ghost" data-preset="300" style="font-size:12px;">Q&amp;A 5:00</button>
+        </div>
+        <div class="st-timer-display" id="timerDisplay">02:00</div>
+        <div class="st-timer-ctrl">
+          <button class="st-btn" id="timerStart">Start</button>
+          <button class="st-btn st-ghost" id="timerReset">Reset</button>
+        </div>
+      </div>
+      <div class="st-draw-zone">
+        <div class="st-eyebrow">Draw a Card</div>
+        <div class="st-draw-btn-row">
+          <button class="st-btn" id="drawBtn">🎴 Draw Card</button>
+        </div>
+        <div class="st-deck-count" id="deckCount" style="margin-top:8px;"></div>
+        <div class="st-drawn-card" id="drawnCardZone"></div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getDatabase, ref, get as fbGet, set as fbSet, remove as fbRemove } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB1i5cuuRClccde-lDKeeIsgjkCKXMVWlE",
+  authDomain: "sharing-time.firebaseapp.com",
+  databaseURL: "https://sharing-time-default-rtdb.firebaseio.com",
+  projectId: "sharing-time",
+  storageBucket: "sharing-time.firebasestorage.app",
+  messagingSenderId: "926609885654",
+  appId: "1:926609885654:web:07816cb21385eb1c0b3c77"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+// Firebase Realtime Database keys can't contain . # $ [ ] /
+function safeKey(key){ return String(key).replace(/[.#$\[\]/]/g, '_'); }
+
+// Drop-in replacement for the window.storage API the app already calls —
+// same shape (get/set/delete returning {key, value, shared} or null),
+// backed by Firebase instead of Claude's artifact storage.
+window.storage = {
+  async get(key, shared){
+    try{
+      const snap = await fbGet(ref(db, safeKey(key)));
+      if(!snap.exists()) return null;
+      return { key, value: snap.val(), shared: !!shared };
+    }catch(e){ return null; }
+  },
+  async set(key, value, shared){
+    try{
+      await fbSet(ref(db, safeKey(key)), value);
+      return { key, value, shared: !!shared };
+    }catch(e){ return null; }
+  },
+  async delete(key, shared){
+    try{
+      await fbRemove(ref(db, safeKey(key)));
+      return { key, deleted: true, shared: !!shared };
+    }catch(e){ return null; }
+  }
+};
+
+(function(){
+  const root = document.getElementById('stApp');
+
+  // ---- Explore card data (curious follow-up questions for habits/life-decision sharing — front question + back explanation) ----
+  const EXPLORE_CARDS = [
+    {q:"When did you realize this mattered to you?", a:"Asking about the start helps you get a real story, not just a general answer."},
+    {q:"What does this look like in your daily life?", a:"This helps make the habit feel real, with clear details."},
+    {q:"What's the hardest part for you?", a:"This makes the story more honest and easy to relate to."},
+    {q:"How did you get started with this?", a:"The start of the story is often the most interesting part."},
+    {q:"What's changed since you started?", a:"This shows the real result, which is often the best part."},
+    {q:"Did someone inspire you to start this?", a:"This adds an interesting detail and can lead to another story."},
+    {q:"What advice would you give a beginner?", a:"This turns the sharer into a mentor, even just for a moment."},
+    {q:"What's one small win you had recently?", a:"Small wins are easy to talk about and keep things light."},
+    {q:"How is this different from before?", a:"This makes the change feel clear and real."}
+  ];
+
+  // ---- Support card data (giving substantive, low-pressure responses for habits/life-decision sharing — front question + back explanation) ----
+  const SUPPORT_CARDS = [
+    {q:"Honestly, what struck me is…", a:"A genuine reaction is enough to make someone feel heard. e.g. '...how calm you sounded, even though it wasn't easy.'"},
+    {q:"The part I'd love to try myself is…", a:"Naming what you'd borrow shows it truly landed with you. e.g. '...starting my morning the way you do.'"},
+    {q:"That reminds me of a time when I…", a:"Sharing something similar keeps the exchange mutual, not one-directional. e.g. '...tried something similar and it didn't go as planned either.'"},
+    {q:"What stood out to me was…", a:"Naming a specific detail shows you noticed how they told it. e.g. '...the moment you decided to just start.'"},
+    {q:"Now I'm curious about…", a:"Ending on a real question shows the share sparked genuine interest. e.g. '...what made you stick with it.'"},
+    {q:"I really admire that you…", a:"A direct, specific compliment is simple but meaningful. e.g. '...kept going even when it got hard.'"},
+    {q:"The most relatable part for me was…", a:"Naming the relatable part makes your response personal. e.g. '...when you said you almost gave up.'"},
+    {q:"If I had to sum up your story, I'd say…", a:"Summarizing shows you followed the story closely. e.g. '...it's about small steps adding up.'"},
+    {q:"The one thing I want to remember is…", a:"This keeps your response genuine and forward-looking. e.g. '...that progress doesn't have to be perfect.'"}
+  ];
+
+  const STICKY_COLORS = ['#F0D935','#4E5B40','#E8944F','#8FA678','#D8BF1E'];
+
+  const FLOWER_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3c1.6 2.1 1.6 4.2 0 6.3-1.6-2.1-1.6-4.2 0-6.3z" stroke="#4E5B40" stroke-width="1.4"/><path d="M12 21c1.6-2.1 1.6-4.2 0-6.3-1.6 2.1-1.6 4.2 0 6.3z" stroke="#4E5B40" stroke-width="1.4"/><path d="M3 12c2.1-1.6 4.2-1.6 6.3 0-2.1 1.6-4.2 1.6-6.3 0z" stroke="#4E5B40" stroke-width="1.4"/><path d="M21 12c-2.1-1.6-4.2-1.6-6.3 0 2.1 1.6 4.2 1.6 6.3 0z" stroke="#4E5B40" stroke-width="1.4"/><circle cx="12" cy="12" r="2.1" fill="#4E5B40"/></svg>';
+  const SPARK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3.3 3.3M14.7 14.7L18 18M18 6l-3.3 3.3M9.3 14.7L6 18" stroke="#B84F22" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+  function cardInnerHTML(c, type){
+    const isSharing = type === 'sharing';
+    const frontClass = 'st-flip-face st-flip-front' + (isSharing ? ' st-flip-front-sharing' : '');
+    const icon = isSharing ? SPARK_SVG : FLOWER_SVG;
+    const label = isSharing ? 'Support' : 'Explore';
+    const themeBadge = c.theme ? `<div class="st-card-theme">${escapeHtml(c.theme)}</div>` : '';
+    const displayQ = `\u201c${c.q}\u201d`;
+    return `<div class="${frontClass}">${themeBadge}<div class="st-card-q">${escapeHtml(displayQ)}</div></div>
+      <div class="st-flip-face st-flip-back"><div class="st-card-a">${escapeHtml(c.a)}</div><div class="st-stamp"><span class="st-stamp-icon">${icon}</span><span class="st-stamp-label">${label}</span></div></div>`;
+  }
+
+  let state = { data: {topic:'', entries: []}, boardFilter:'week', deck: [], drawn: [], imageCache: {}, pendingImageDataUrl: null, selectedMonth: 'all', selectedWeek: 'all' };
+
+  // ---- storage helpers ----
+  async function loadData(){
+    try {
+      const r = await window.storage.get('sharing-data', true);
+      return r ? JSON.parse(r.value) : {topic:'', entries:[]};
+    } catch(e){ return {topic:'', entries:[]}; }
+  }
+  async function saveData(data){
+    try { await window.storage.set('sharing-data', JSON.stringify(data), true); }
+    catch(e){ console.error('storage save failed', e); }
+  }
+  async function saveEntryImage(id, dataUrl){
+    try { await window.storage.set('st-img-'+id, JSON.stringify({dataUrl}), true); }
+    catch(e){ console.error('image save failed', e); }
+  }
+  async function ensureImages(entries){
+    const missing = entries.filter(e=> e.hasImage && !state.imageCache[e.id]);
+    await Promise.all(missing.map(async e=>{
+      try{
+        const r = await window.storage.get('st-img-'+e.id, true);
+        if(r) state.imageCache[e.id] = JSON.parse(r.value).dataUrl;
+      } catch(err){ /* image missing or failed - ignore, sticky just shows no image */ }
+    }));
+  }
+  function compressImageFile(file){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onerror = ()=> reject(new Error('Read failed'));
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onerror = ()=> reject(new Error('Image failed to load'));
+        img.onload = ()=>{
+          const maxW = 700;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function weekOfMonth(date){ return Math.min(5, Math.ceil(date.getDate()/7)); }
+  function monthKey(date){ return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0'); }
+  function monthLabel(key){ const [y,m] = key.split('-'); const names=['January','February','March','April','May','June','July','August','September','October','November','December']; return names[parseInt(m,10)-1]+' '+y; }
+
+  // ---- tabs ----
+  root.querySelectorAll('.st-tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+  });
+  root.querySelectorAll('[data-goto]').forEach(el=>{
+    el.addEventListener('click', ()=> switchTab(el.dataset.goto));
+  });
+  function switchTab(name){
+    root.querySelectorAll('.st-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===name));
+    root.querySelectorAll('.st-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel===name));
+    if(name==='board') renderBoard();
+  }
+
+  // ---- topic ----
+  const topicDisplay = document.getElementById('topicDisplay');
+  const topicInput = document.getElementById('topicInput');
+  const topicEditRow = document.getElementById('topicEditRow');
+  const topicEditBtn = document.getElementById('topicEditBtn');
+  const topicSaveBtn = document.getElementById('topicSaveBtn');
+
+  topicEditBtn.addEventListener('click', ()=>{
+    topicInput.value = state.data.topic || '';
+    topicEditRow.style.display = 'flex';
+    topicSaveBtn.style.display = 'inline-block';
+  });
+  topicSaveBtn.addEventListener('click', async ()=>{
+    state.data.topic = topicInput.value.trim();
+    await saveData(state.data);
+    topicEditRow.style.display='none';
+    topicSaveBtn.style.display='none';
+    renderTopic();
+    renderBoard();
+  });
+  function renderTopic(){
+    topicDisplay.textContent = state.data.topic ? state.data.topic : 'Not set yet — set it below';
+  }
+
+  // ---- preview strip ----
+  function renderPreview(){
+    const strip = document.getElementById('previewStrip');
+    const latest = [...state.data.entries].sort((a,b)=>b.timestamp-a.timestamp).slice(0,3);
+    if(latest.length===0){ strip.innerHTML = '<span style="font-size:13px;color:var(--ink-soft);">No uploads yet — head to the Share Board and post the first sticky note</span>'; return; }
+    strip.innerHTML = latest.map((e,i)=>`<div class="st-mini-note" style="--r:${(i%2?1:-1)*3}deg;"><b style="font-size:12px;">${escapeHtml(e.name)}</b>${escapeHtml(e.content)}</div>`).join('');
+  }
+
+  // ---- board ----
+  const historyControls = document.getElementById('historyControls');
+  root.querySelectorAll('.st-filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      root.querySelectorAll('.st-filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.boardFilter = btn.dataset.filter;
+      historyControls.style.display = state.boardFilter==='history' ? 'flex' : 'none';
+      renderBoard();
+    });
+  });
+  document.getElementById('refreshBoardBtn').addEventListener('click', async ()=>{
+    state.data = await loadData();
+    renderTopic(); populateMonthSelect(); renderBoard(); renderPreview();
+  });
+  document.getElementById('monthSelect').addEventListener('change', e=>{ state.selectedMonth = e.target.value; renderBoard(); });
+  document.getElementById('weekSelect').addEventListener('change', e=>{ state.selectedWeek = e.target.value; renderBoard(); });
+  document.getElementById('searchInput').addEventListener('input', ()=> renderBoard());
+
+  document.getElementById('imageFileInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try {
+      const dataUrl = await compressImageFile(file);
+      state.pendingImageDataUrl = dataUrl;
+      document.getElementById('imgPreview').src = dataUrl;
+      document.getElementById('imgPreviewWrap').style.display = 'flex';
+    } catch(err){
+      alert('Image processing failed — try pasting an "Image URL" instead');
+    }
+  });
+  document.getElementById('clearImgBtn').addEventListener('click', ()=>{
+    state.pendingImageDataUrl = null;
+    document.getElementById('imageFileInput').value = '';
+    document.getElementById('imgPreviewWrap').style.display = 'none';
+  });
+
+  document.getElementById('uploadBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('nameInput').value.trim();
+    const content = document.getElementById('contentInput').value.trim();
+    if(!name || !content) return;
+    let link = document.getElementById('linkInput').value.trim();
+    if(link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+    const imageUrl = document.getElementById('imageUrlInput').value.trim();
+    const id = Date.now()+'-'+Math.random().toString(36).slice(2,7);
+    const hasImage = !!state.pendingImageDataUrl && !imageUrl;
+    state.data.entries.push({ id, name, content, link: link || '', imageUrl: imageUrl || '', hasImage, topic: state.data.topic || '(Uncategorized)', timestamp: Date.now() });
+    if(hasImage){
+      await saveEntryImage(id, state.pendingImageDataUrl);
+      state.imageCache[id] = state.pendingImageDataUrl;
+    }
+    await saveData(state.data);
+    document.getElementById('nameInput').value=''; document.getElementById('contentInput').value='';
+    document.getElementById('linkInput').value=''; document.getElementById('imageUrlInput').value='';
+    document.getElementById('clearImgBtn').click();
+    populateMonthSelect(); renderBoard(); renderPreview();
+  });
+
+  function populateMonthSelect(){
+    const sel = document.getElementById('monthSelect');
+    const keys = new Set(state.data.entries.map(e=> monthKey(new Date(e.timestamp))));
+    keys.add(monthKey(new Date()));
+    const sorted = [...keys].sort().reverse();
+    const current = sel.value || 'all';
+    sel.innerHTML = '<option value="all">All Months</option>' + sorted.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join('');
+    sel.value = sorted.includes(current) ? current : 'all';
+    state.selectedMonth = sel.value;
+  }
+
+  async function renderBoard(){
+    const wall = document.getElementById('stickyWall');
+    const currentTopic = state.data.topic || '(Uncategorized)';
+    const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+    let list;
+    if(state.boardFilter==='week'){
+      list = state.data.entries.filter(e=> e.topic===currentTopic);
+    } else if(searchTerm){
+      list = state.data.entries.filter(e=>
+        e.name.toLowerCase().includes(searchTerm) ||
+        e.content.toLowerCase().includes(searchTerm) ||
+        (e.link||'').toLowerCase().includes(searchTerm) ||
+        (e.topic||'').toLowerCase().includes(searchTerm)
+      );
+    } else {
+      list = state.data.entries.filter(e=>{
+        const d = new Date(e.timestamp);
+        const okMonth = state.selectedMonth==='all' || monthKey(d)===state.selectedMonth;
+        const okWeek = state.selectedWeek==='all' || String(weekOfMonth(d))===state.selectedWeek;
+        return okMonth && okWeek;
+      });
+    }
+    list = [...list].sort((a,b)=>b.timestamp-a.timestamp);
+    if(list.length===0){
+      wall.innerHTML = `<span class="st-empty-note">${state.boardFilter==='week' ? "No uploads yet this week — be the first to post a sticky note" : (searchTerm ? 'No matching results' : 'No entries in this range yet')}</span>`;
+      return;
+    }
+    await ensureImages(list);
+    wall.innerHTML = list.map((e,i)=>{
+      const color = STICKY_COLORS[i % STICKY_COLORS.length];
+      const d = new Date(e.timestamp);
+      const dateStr = (d.getMonth()+1)+'/'+d.getDate();
+      const imgSrc = e.imageUrl || (e.hasImage ? state.imageCache[e.id] : '');
+      const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="" onerror="this.style.display='none'" />` : '';
+      const linkHtml = e.link ? `<a class="st-link" href="${escapeHtml(e.link)}" target="_blank" rel="noopener">🔗 Related link</a>` : '';
+      return `<div class="st-sticky" style="border-left-color:${color};"><b>${escapeHtml(e.name)}</b>${escapeHtml(e.content)}${imgHtml}${linkHtml}<time>${escapeHtml(e.topic)} · ${dateStr}</time></div>`;
+    }).join('');
+  }
+
+  // ---- cards ----
+  function renderCardGrid(gridId, cards, type){
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = cards.map((c,i)=>`
+      <div class="st-flip-outer" data-i="${i}">
+        <div class="st-flip-inner">${cardInnerHTML(c, type)}</div>
+      </div>`).join('');
+    grid.querySelectorAll('.st-flip-outer').forEach(el=>{
+      el.addEventListener('click', ()=> el.classList.toggle('flipped'));
+    });
+  }
+  function renderCards(){
+    renderCardGrid('exploreGrid', EXPLORE_CARDS, 'explore');
+    renderCardGrid('supportGrid', SUPPORT_CARDS, 'sharing');
+  }
+
+  // ---- draw deck (activity) — combined Explore + Support deck ----
+  const ALL_CARDS = [
+    ...EXPLORE_CARDS.map(c => ({...c, type: 'explore'})),
+    ...SUPPORT_CARDS.map(c => ({...c, type: 'sharing'}))
+  ];
+  function resetDeck(){
+    state.deck = ALL_CARDS.map((_,i)=>i);
+    for(let i=state.deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [state.deck[i],state.deck[j]]=[state.deck[j],state.deck[i]]; }
+    state.drawn = [];
+    updateDeckCount();
+    document.getElementById('drawnCardZone').innerHTML='';
+  }
+  function updateDeckCount(){
+    document.getElementById('deckCount').textContent = `${state.deck.length} / ${ALL_CARDS.length} remaining`;
+  }
+  document.getElementById('drawBtn').addEventListener('click', ()=>{
+    if(state.deck.length===0){ resetDeck(); }
+    const idx = state.deck.pop();
+    state.drawn.push(idx);
+    updateDeckCount();
+    const c = ALL_CARDS[idx];
+    const zone = document.getElementById('drawnCardZone');
+    zone.innerHTML = `<div class="st-flip-outer" style="height:190px;margin:0 auto;">
+      <div class="st-flip-inner">${cardInnerHTML(c, c.type)}</div>
+    </div>`;
+    zone.querySelector('.st-flip-outer').addEventListener('click', function(){ this.classList.toggle('flipped'); });
+  });
+
+  // ---- timer ----
+  let timerSeconds = 120, timerTotal = 120, timerRunning=false, timerHandle=null;
+  const timerDisplay = document.getElementById('timerDisplay');
+  function renderTimer(){
+    const m = String(Math.floor(timerSeconds/60)).padStart(2,'0');
+    const s = String(timerSeconds%60).padStart(2,'0');
+    timerDisplay.textContent = `${m}:${s}`;
+  }
+  root.querySelectorAll('[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      clearInterval(timerHandle); timerRunning=false;
+      document.getElementById('timerStart').textContent='Start';
+      timerTotal = parseInt(btn.dataset.preset,10); timerSeconds = timerTotal; renderTimer();
+    });
+  });
+  document.getElementById('timerStart').addEventListener('click', function(){
+    if(timerRunning){
+      clearInterval(timerHandle); timerRunning=false; this.textContent='Start';
+    } else {
+      timerRunning=true; this.textContent='Pause';
+      timerHandle = setInterval(()=>{
+        if(timerSeconds<=0){ clearInterval(timerHandle); timerRunning=false; document.getElementById('timerStart').textContent='Start'; return; }
+        timerSeconds--; renderTimer();
+      },1000);
+    }
+  });
+  document.getElementById('timerReset').addEventListener('click', ()=>{
+    clearInterval(timerHandle); timerRunning=false; timerSeconds=timerTotal; renderTimer();
+    document.getElementById('timerStart').textContent='Start';
+  });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // ---- reminder particle dissolve (from workshop environment guidelines) ----
+  const REMINDERS = [
+    'This is a warm, welcoming space — feel free to share positive or constructive feedback.',
+    'This is a supportive environment. Everyone is invited to learn and grow together.',
+    'Try to understand each other\'s perspective, and skip the harsh criticism.'
+  ];
+  function startReminderFade(){
+    const chip = document.getElementById('reminderChip');
+    const el = document.getElementById('reminderText');
+    if(!chip || !el) return;
+    let idx = 0;
+    el.textContent = REMINDERS[0];
+    setInterval(()=>{
+      chip.classList.add('st-fade-out');
+      el.classList.add('st-fade-out');
+      setTimeout(()=>{
+        idx = (idx + 1) % REMINDERS.length;
+        el.textContent = REMINDERS[idx];
+        chip.classList.remove('st-fade-out');
+        el.classList.remove('st-fade-out');
+      }, 1800);
+    }, 6000);
+  }
+
+  // ---- init ----
+  (async function init(){
+    state.data = await loadData();
+    renderTopic(); populateMonthSelect(); renderBoard(); renderPreview(); renderCards(); resetDeck(); renderTimer();
+    startReminderFade();
+    const loadingOverlay = document.getElementById('stLoadingOverlay');
+    if(loadingOverlay) loadingOverlay.classList.add('st-hide');
+    setInterval(async ()=>{
+      if(document.querySelector('.st-panel[data-panel="board"]').classList.contains('active')){
+        state.data = await loadData();
+        populateMonthSelect(); renderBoard(); renderTopic();
+      }
+    }, 15000);
+  })();
+})();
+</script>
+</body>
+</html>
