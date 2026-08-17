@@ -139,7 +139,8 @@
 }
 .st-reminder-particle-wrap.st-fade-out { opacity:0; transform: translateY(3px); }
 .st-preview-strip { display:flex; gap:14px; margin-top:18px; flex-wrap:wrap; }
-.st-mini-note { background: var(--glass-note); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border:none; border-left:4px solid var(--brand); border-radius:5px; padding:10px 12px; font-size:12.5px; max-width:170px; box-shadow: 0 3px 10px rgba(34,30,25,.08); }
+.st-mini-note { background: var(--glass-note); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border:none; border-left:4px solid var(--brand); border-radius:5px; padding:10px 12px; font-size:12.5px; max-width:170px; box-shadow: 0 3px 10px rgba(34,30,25,.08); cursor:pointer; transition: transform .15s, box-shadow .15s; }
+.st-mini-note:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(34,30,25,.14); }
 .st-topic-banner {
   background: linear-gradient(150deg, var(--brand-soft) 0%, var(--brand) 55%, var(--brand-dark) 100%);
   border-radius: 9px; padding:22px 28px; display:flex; align-items:center; justify-content:space-between;
@@ -608,7 +609,10 @@ window.storage = {
     const strip = document.getElementById('previewStrip');
     const latest = [...state.data.entries].sort((a,b)=>b.timestamp-a.timestamp).slice(0,3);
     if(latest.length===0){ strip.innerHTML = '<span style="font-size:13px;color:var(--ink-soft);">No uploads yet — head to the Share Board and post the first sticky note</span>'; return; }
-    strip.innerHTML = latest.map((e,i)=>`<div class="st-mini-note" style="--r:${(i%2?1:-1)*3}deg;"><b style="font-size:12px;">${escapeHtml(e.name)}</b>${escapeHtml(e.content)}</div>`).join('');
+    strip.innerHTML = latest.map((e,i)=>{
+      const linkHint = e.link ? ' 🔗' : '';
+      return `<div class="st-mini-note" style="--r:${(i%2?1:-1)*3}deg;"><b style="font-size:12px;">${escapeHtml(e.name)}${linkHint}</b>${escapeHtml(e.content)}</div>`;
+    }).join('');
   }
 
   // ---- board ----
@@ -820,6 +824,11 @@ window.storage = {
       }, 1800);
     }, 6000);
   }
+
+  // ---- latest uploads preview: click a mini-note to jump to the full Share Board ----
+  document.getElementById('previewStrip').addEventListener('click', (e)=>{
+    if(e.target.closest('.st-mini-note')) switchTab('board');
+  });
 
   // ---- image lightbox (click a sticky-note photo to view it larger) ----
   const lightbox = document.getElementById('stLightbox');
