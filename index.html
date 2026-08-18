@@ -844,6 +844,27 @@ window.storage = {
     lightboxImg.src = '';
   });
 
+  // ---- admin helper (browser console only) ----
+  // Open the live site, press F12 (or right-click > Inspect) > Console tab, then:
+  //   await stAdmin.listEntries()        -> shows a table of all entries with their id
+  //   await stAdmin.deleteEntry('id')    -> deletes that one entry and refreshes the board
+  window.stAdmin = {
+    async listEntries(){
+      const data = await loadData();
+      console.table(data.entries.map(e=>({ id:e.id, name:e.name, content:e.content, topic:e.topic, time:new Date(e.timestamp).toLocaleString() })));
+      return data.entries;
+    },
+    async deleteEntry(id){
+      const data = await loadData();
+      const before = data.entries.length;
+      data.entries = data.entries.filter(e=> e.id !== id);
+      await saveData(data);
+      state.data = data;
+      populateMonthSelect(); renderBoard(); renderPreview();
+      console.log(`Deleted. Entries: ${before} -> ${data.entries.length}`);
+    }
+  };
+
   // ---- init ----
   (async function init(){
     state.data = await loadData();
